@@ -66,10 +66,10 @@ def level_to_data(file_path, out_path):
         data[channel][index] = 1
 
     # Output
-    np.savetxt(out_path, data, delimiter=",", fmt='%1d')
+    np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
 
 def data_to_level(file_path, out_path):
     np.loadtxt(file_path, dtype=int, delimiter=',')
 
 if __name__ == "__main__":
-    level_to_data('example.xml', 'test.gz')
+    level_to_data('example.xml', 'example.test.gz')

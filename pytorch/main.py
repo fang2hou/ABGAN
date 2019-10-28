@@ -69,29 +69,15 @@ if torch.cuda.is_available() and not opt.cuda:
 
 map_size = 32
 
-if opt.problem == 0:
-    examplesJson = "example.json"
-else:
-    examplesJson = "sepEx/examplemario{}.json".format(opt.problem)
-X = np.array(json.load(open(examplesJson)))
-print(X)
-print(X.shape)
-z_dims = 10  # Numer different title types
+_, _, train_data_names = os.walk('../data/samples').__next__()
 
-num_batches = X.shape[0] / opt.batchSize
+X = []
+for train_data_name in train_data_names:
+    train_data = np.loadtxt('../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
+    train_data = torch.from_numpy(train_data)
+    X.append(train_data)
 
-print("SHAPE ", X.shape)
-X_onehot = np.eye(z_dims, dtype='uint8')[X]
-
-X_onehot = np.rollaxis(X_onehot, 3, 1)
-print("SHAPE ", X_onehot.shape)  # (173, 14, 28, 16)
-
-X_train = np.zeros((X.shape[0], z_dims, map_size, map_size))*2
-
-X_train[:, 2, :, :] = 1.0  # Fill with empty space
-
-# Pad part of level so its a square
-X_train[:X.shape[0], :, :X.shape[1], :X.shape[2]] = X_onehot
+X = torch.stack(X, dim=0)
 
 ngpu = int(opt.ngpu)
 nz = int(opt.nz)

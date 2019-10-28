@@ -1889,14 +1889,11 @@ def protect_vulnerable_blocks2(complete_locations,final_platforms,final_pig_posi
 
     return complete_locations
 
-
-
-
 # write level out in desired xml format
 
 def write_level_xml(final_blocks, selected_other, final_pig_positions, final_platforms, number_birds, bird_order, final_materials, final_tnt_positions, extra_platforms_angled, current_level, restricted_combinations):
 
-    f = open("level-%s.xml" % current_level, "w")
+    f = open("orginal_levels/level-%s.xml" % current_level, "w")
 
     f.write('<?xml version="1.0" encoding="utf-8"?>\n')
     f.write('<Level width ="2" >\n')

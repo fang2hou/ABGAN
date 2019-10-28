@@ -3,7 +3,7 @@ import time
 from sys import stdout
 import convert.abpype as ap
 
-_, _, filenames = os.walk(os.getcwd()).__next__()
+dirpath, _, filenames = os.walk('original_levels').__next__()
 
 level_list = []
 
@@ -18,7 +18,7 @@ convert_time = time.time()
 
 num_converted = 0
 for level in level_list:
-    ap.level_to_data(level, 'samples/'+level[:-4]+'.gz')
+    ap.level_to_data(dirpath+'/'+level, 'samples/'+level[:-4]+'.gz')
     num_converted += 1
     
     progress = num_converted / num_levels * 100
