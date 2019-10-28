@@ -22,10 +22,10 @@ import models.mlp as mlp
 parser = argparse.ArgumentParser()
 parser.add_argument('--nz', type=int, default=32,
                     help='size of the latent z vector')
-parser.add_argument('--ngf', type=int, default=64)
-parser.add_argument('--ndf', type=int, default=64)
+parser.add_argument('--ngf', type=int, default=32)
+parser.add_argument('--ndf', type=int, default=32)
 parser.add_argument('--batchSize', type=int,
-                    default=32, help='input batch size')
+                    default=30, help='input batch size')
 parser.add_argument('--niter', type=int, default=5000,
                     help='number of epochs to train for')
 parser.add_argument('--lrD', type=float, default=0.00005,
@@ -41,23 +41,19 @@ parser.add_argument('--netG', default='',
                     help="path to netG (to continue training)")
 parser.add_argument('--netD', default='',
                     help="path to netD (to continue training)")
-parser.add_argument('--clamp_lower', type=float, default=-0.01)
-parser.add_argument('--clamp_upper', type=float, default=0.01)
+parser.add_argument('--clamp_lower', type=float, default=-0.12)
+parser.add_argument('--clamp_upper', type=float, default=0.12)
 parser.add_argument('--Diters', type=int, default=5,
                     help='number of D iters per each G iter')
 
 parser.add_argument('--n_extra_layers', type=int, default=0,
                     help='Number of extra layers on gen and disc')
-parser.add_argument('--experiment', default=None,
-                    help='Where to store samples and models')
 parser.add_argument('--adam', action='store_true',
                     help='Whether to use adam (default is rmsprop)')
 opt = parser.parse_args()
 print(opt)
 
-if opt.experiment is None:
-    opt.experiment = 'samples'
-os.system('mkdir {0}'.format(opt.experiment))
+os.system('mkdir results')
 
 opt.manualSeed = random.randint(1, 10000)  # fix seed
 print("Random Seed: ", opt.manualSeed)
@@ -67,22 +63,26 @@ torch.manual_seed(opt.manualSeed)
 if torch.cuda.is_available() and not opt.cuda:
     print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-map_size = 32
+map_size = 128
 
 _, _, train_data_names = os.walk('../data/samples').__next__()
 
 X = []
 for train_data_name in train_data_names:
     train_data = np.loadtxt('../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
+    train_data = np.reshape(train_data, (21, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
+z_dims = 21 # Channels
+num_batches = X.shape[0] / opt.batchSize
+
 ngpu = int(opt.ngpu)
-nz = int(opt.nz)
-ngf = int(opt.ngf)
-ndf = int(opt.ndf)
+nz   = int(opt.nz)
+ngf  = int(opt.ngf)
+ndf  = int(opt.ndf)
 
 n_extra_layers = int(opt.n_extra_layers)
 
@@ -138,7 +138,7 @@ for epoch in range(opt.niter):
 
     #! data_iter = iter(dataloader)
 
-    X_train = X_train[torch.randperm(len(X_train))]
+    X_train = X[torch.randperm(len(X))].float()
 
     i = 0
     while i < num_batches:  # len(dataloader):
@@ -167,15 +167,6 @@ for epoch in range(opt.niter):
 
             real_cpu = torch.FloatTensor(data)
 
-            if (False):
-                #im = data.cpu().numpy()
-                print(data.shape)
-                real_cpu = combine_images(tiles2image(np.argmax(data, axis=1)))
-                print(real_cpu)
-                plt.imsave(
-                    '{0}/real_samples.png'.format(opt.experiment), real_cpu)
-                exit()
-
             netD.zero_grad()
             # batch_size = num_samples #real_cpu.size(0)
 
@@ -190,8 +181,8 @@ for epoch in range(opt.niter):
 
             # train with fake
             noise.resize_(opt.batchSize, nz, 1, 1).normal_(0, 1)
-            noisev = Variable(noise, volatile=True)  # totally freeze netG
-            fake = Variable(netG(noisev).data)
+            with torch.no_grad():
+                fake = Variable(netG(noise).data)
             inputv = fake
             errD_fake = netD(inputv)
             errD_fake.backward(mone)
@@ -218,19 +209,10 @@ for epoch in range(opt.niter):
               % (epoch, opt.niter, i, num_batches, gen_iterations,
                  errD.data[0], errG.data[0], errD_real.data[0], errD_fake.data[0]))
         if gen_iterations % 50 == 0:  # was 500
-
-            fake = netG(Variable(fixed_noise, volatile=True))
-
-            im = fake.data.cpu().numpy()
-            #print('SHAPE fake',type(im), im.shape)
-            #print('SUM ',np.sum( im, axis = 1) )
-
-            im = combine_images(tiles2image(np.argmax(im, axis=1)))
-
-            plt.imsave(
-                '{0}/mario_fake_samples_{1}.png'.format(opt.experiment, gen_iterations), im)
-            torch.save(netG.state_dict(), '{0}/netG_epoch_{1}_{2}_{3}.pth'.format(
-                opt.experiment, gen_iterations, opt.problem, opt.nz))
+            with torch.no_grad():
+                fake = netG(Variable(fixed_noise, volatile=True))
+            torch.save(netG.state_dict(), 'results/netG_epoch_{1}_{3}.pth'.format(
+                gen_iterations, opt.nz))
 
     # do checkpointing
     #torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
