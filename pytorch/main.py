@@ -1,18 +1,12 @@
+# DCGAN for Science Birds game level
 import os
-import math
-import json
 import argparse
 import random
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 from torch.autograd import Variable
 import models.dcgan as dcgan
 
@@ -28,9 +22,9 @@ parser.add_argument('--batchSize', type=int,
 parser.add_argument('--niter', type=int, default=5000,
                     help='number of epochs to train for')
 parser.add_argument('--lrD', type=float, default=0.00005,
-                    help='learning rate for Critic, default=0.00005')
+                    help='learning rate for Critic, default=1')
 parser.add_argument('--lrG', type=float, default=0.00005,
-                    help='learning rate for Generator, default=0.00005')
+                    help='learning rate for Generator, default=1')
 parser.add_argument('--beta1', type=float, default=0.5,
                     help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
@@ -40,8 +34,8 @@ parser.add_argument('--netG', default='',
                     help="path to netG (to continue training)")
 parser.add_argument('--netD', default='',
                     help="path to netD (to continue training)")
-parser.add_argument('--clamp_lower', type=float, default=-0.12)
-parser.add_argument('--clamp_upper', type=float, default=0.12)
+parser.add_argument('--clamp_lower', type=float, default=-0.01)
+parser.add_argument('--clamp_upper', type=float, default=0.01)
 parser.add_argument('--Diters', type=int, default=5,
                     help='number of D iters per each G iter')
 
@@ -68,27 +62,24 @@ _, _, train_data_names = os.walk('../data/samples').__next__()
 
 X = []
 for train_data_name in train_data_names:
-    train_data = np.loadtxt(
-        '../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
+    train_data = np.loadtxt('../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
     train_data = np.reshape(train_data, (21, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
-z_dims = 21  # Channels
+z_dims = 21 # Channels
 num_batches = X.shape[0] / opt.batchSize
 
 ngpu = int(opt.ngpu)
-nz = int(opt.nz)
-ngf = int(opt.ngf)
-ndf = int(opt.ndf)
+nz   = int(opt.nz)
+ngf  = int(opt.ngf)
+ndf  = int(opt.ndf)
 
 n_extra_layers = int(opt.n_extra_layers)
 
 # custom weights initialization called on netG and netD
-
-
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -96,7 +87,6 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
-
 
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
 
@@ -213,9 +203,8 @@ for epoch in range(opt.niter):
                  errD.data[0], errG.data[0], errD_real.data[0], errD_fake.data[0]))
         if gen_iterations % 50 == 0:  # was 500
             with torch.no_grad():
-                fake = netG(Variable(fixed_noise, volatile=True))
-            torch.save(netG.state_dict(
-            ), 'results/netG_epoch_{1}_{2}.pth'.format(gen_iterations, opt.nz))
+                fake = netG(fixed_noise)
+            torch.save(netG.state_dict(), 'results/netG_epoch_{}_{}.pth'.format(gen_iterations, opt.nz))
 
     # do checkpointing
     #torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
