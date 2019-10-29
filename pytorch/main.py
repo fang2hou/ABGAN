@@ -15,7 +15,6 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
 import models.dcgan as dcgan
-import models.mlp as mlp
 
 # Run with "python main.py"
 
@@ -69,24 +68,27 @@ _, _, train_data_names = os.walk('../data/samples').__next__()
 
 X = []
 for train_data_name in train_data_names:
-    train_data = np.loadtxt('../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
+    train_data = np.loadtxt(
+        '../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
     train_data = np.reshape(train_data, (21, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
-z_dims = 21 # Channels
+z_dims = 21  # Channels
 num_batches = X.shape[0] / opt.batchSize
 
 ngpu = int(opt.ngpu)
-nz   = int(opt.nz)
-ngf  = int(opt.ngf)
-ndf  = int(opt.ndf)
+nz = int(opt.nz)
+ngf = int(opt.ngf)
+ndf = int(opt.ndf)
 
 n_extra_layers = int(opt.n_extra_layers)
 
 # custom weights initialization called on netG and netD
+
+
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -94,6 +96,7 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
 
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
 
@@ -211,8 +214,8 @@ for epoch in range(opt.niter):
         if gen_iterations % 50 == 0:  # was 500
             with torch.no_grad():
                 fake = netG(Variable(fixed_noise, volatile=True))
-            torch.save(netG.state_dict(), 'results/netG_epoch_{1}_{3}.pth'.format(
-                gen_iterations, opt.nz))
+            torch.save(netG.state_dict(
+            ), 'results/netG_epoch_{1}_{2}.pth'.format(gen_iterations, opt.nz))
 
     # do checkpointing
     #torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
