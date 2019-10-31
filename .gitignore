@@ -124,3 +124,9 @@ dmypy.json
 
 # Visual Studio Code
 .vscode
+
+# PyTorch model weights file
+*.pth
+
+# macOS cache
+*.DS_Store
