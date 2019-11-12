@@ -204,7 +204,7 @@ for epoch in range(opt.niter):
         if gen_iterations % 50 == 0:  # was 500
             with torch.no_grad():
                 fake = netG(fixed_noise)
-            torch.save(netG.state_dict(), 'results/netG_epoch_{}_{}.pth'.format(gen_iterations, opt.nz))
+            torch.save(netG.state_dict(), 'saves/netG_epoch_{}_{}.pth'.format(gen_iterations, opt.nz))
 
     # do checkpointing
     #torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
