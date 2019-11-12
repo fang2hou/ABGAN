@@ -3,14 +3,13 @@ import xml.etree.ElementTree as ET
 import level_io as li
 import numpy as np
 
-WIDTH_MIN = -3.5
+WIDTH_MIN = 0
 WIDTH_MAX = 8.5
 HEIGHT_MIN = -3.5
 HEIGHT_MAX = 5.0
 
 TRAIN_SCALE_WIDTH = 128
 TRAIN_SCALE_HEIGHT = 128
-
 
 # Channel name
 channel_to_names = {
@@ -71,21 +70,58 @@ def level_to_data(file_path, out_path):
     np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
 
 def data_to_level(file_path, out_path):
-    train_data = np.loadtxt(file_path, dtype=int, delimiter=',', encoding='utf8')
+    data = np.loadtxt(file_path, dtype=int, delimiter=',', encoding='utf8')
+    block_table = np.zeros((TRAIN_SCALE_HEIGHT, TRAIN_SCALE_WIDTH), dtype=int)
 
+    # Preview the structure
+    for x in range(TRAIN_SCALE_HEIGHT):
+        for y in range(TRAIN_SCALE_WIDTH):
+            index = x * TRAIN_SCALE_WIDTH + y
+            channel = np.argmax(data[:, index])
+            
+            # If there is no block, skip it
+            if data[channel, index] == 0:
+                continue
+            
+            block_table[x][y] = channel + 1
 
-#if __name__ == "__main__":
+    # TODO:Tricks
 
-data = np.loadtxt("../../model/results/from_net_1.gz", dtype=int, delimiter=',', encoding='utf8')
-block_table = np.zeros((TRAIN_SCALE_HEIGHT, TRAIN_SCALE_WIDTH), dtype=int)
+    # Initialize the level
+    new_level = li.level()
+    new_level.add_birds("BirdRed", 1)
+    new_level.add_birds("BirdBlack", 4)
+    new_level.add_birds("BirdBlue", 2)
 
-for x in range(TRAIN_SCALE_HEIGHT):
-    for y in range(TRAIN_SCALE_WIDTH):
-        index = x * TRAIN_SCALE_WIDTH + y
-        channel = np.argmax(data[:, index])
-        
-        # If there is no block, skip it
-        if data[channel, index] == 0:
-            continue
-        
-        block_table[x][y] = channel + 1
+    for x in range(TRAIN_SCALE_HEIGHT):
+        for y in range(TRAIN_SCALE_WIDTH):
+            real_x, real_y = inverse_normalize_postion(x+1, y+1)
+
+            if block_table[x][y] == 0:
+                continue
+
+            block_name = channel_to_names[block_table[x][y]]
+
+            normal_blocks = [
+                'SquareHole', 'RectFat', 'SquareSmall', 'SquareTiny', 'RectTiny',
+                'RectSmall', 'RectSmall', 'RectMedium', 'RectBig',
+                'TriangleHole', 'Triangle', 'Circle', 'CircleSmall',
+                'TNT', 'Pig', 'Platform',
+            ]
+
+            rotate_blocks = [
+                'RectFat90', 'RectTiny90', 'RectSmall90', 'RectMedium90', 'RectBig90',
+                'Triangle90'
+            ]
+
+            if block_name in normal_blocks:
+                new_level.add_block(type=block_name, x=real_x, y=real_y, material="ice")
+            elif block_name in rotate_blocks:
+                new_level.add_block(type=block_name[:-2], x=real_x, y=real_y, rotation=90, material="ice")
+            else:
+                print('ERROR: Create {} block failed.'.format(block_name))
+
+    new_level.export(out_path)
+
+if __name__ == "__main__":
+    data_to_level("../../model/results/from_net_1.gz", "level-3.xml")

@@ -41,7 +41,7 @@ for i, result in enumerate(results, 1):
     for x in range(map_size):
         for y in range(map_size):
             channel = torch.argmax(result[:,x,y])
-            if result[channel,x,y] < .2:
+            if result[channel,x,y] < .6:
                 continue
             index = x * map_size + y
             temp[channel][index] = 1
