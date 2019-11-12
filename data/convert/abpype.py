@@ -76,7 +76,7 @@ def data_to_level(file_path, out_path):
 
 #if __name__ == "__main__":
 
-data = np.loadtxt("from_net_1.gz", dtype=int, delimiter=',', encoding='utf8')
+data = np.loadtxt("../../model/results/from_net_1.gz", dtype=int, delimiter=',', encoding='utf8')
 block_table = np.zeros((TRAIN_SCALE_HEIGHT, TRAIN_SCALE_WIDTH), dtype=int)
 
 for x in range(TRAIN_SCALE_HEIGHT):
