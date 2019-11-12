@@ -5,7 +5,7 @@ import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/netG_epoch_3150_32.pth"
+    saved_model = "saves/netG_epoch_750_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
    saved_model = sys.argv[1]
@@ -41,7 +41,7 @@ for i, result in enumerate(results, 1):
     for x in range(map_size):
         for y in range(map_size):
             channel = torch.argmax(result[:,x,y])
-            if result[channel,x,y] < 0.3:
+            if result[channel,x,y] < .2:
                 continue
             index = x * map_size + y
             temp[channel][index] = 1
