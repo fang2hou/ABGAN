@@ -10,6 +10,7 @@ if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
 else:
    saved_model = sys.argv[1]
 
+# Set number of levels
 batch_size = 2
 
 # Set the parameters same as the used in training process
