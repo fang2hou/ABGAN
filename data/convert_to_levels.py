@@ -20,7 +20,7 @@ convert_time = time.time()
 num_converted = 0
 for index, data in enumerate(data_list, 3):
     for test_threshold in range(1, 10, 1):
-       ap.data_to_level(dirpath+'/'+data, 'generated_levels/level-{0:2d}-{1:.2f}.xml'.format(index, test_threshold*0.1), threshold=test_threshold*0.1)
+       ap.data_to_level(dirpath+'/'+data, '../results/level-{0:2d}-{1:.2f}.xml'.format(index, test_threshold*0.1), threshold=test_threshold*0.1)
 
     num_converted += 1
     
