@@ -1,6 +1,8 @@
 # Import libraries
 import xml.etree.ElementTree as ET
-import level_io as li
+from lxml import etree as ETL
+import xml.dom.minidom as MD
+import os
 import numpy as np
 
 WIDTH_MIN = 0
@@ -10,6 +12,78 @@ HEIGHT_MAX = 5.0
 
 TRAIN_SCALE_WIDTH = 128
 TRAIN_SCALE_HEIGHT = 128
+
+# From level_io
+# https://github.com/fang2hou/Science-Birds-Edit-for-GCCE-2019
+# Easy-to-go class for building Science Birds Levels.
+class level():
+    def __init__(self):
+        # root
+        root = ETL.Element('Level')
+        # subelements
+        ETL.SubElement(root, 'Camera', {
+            # default camera
+            "x":"0",
+            "y":"-1",
+            "minWidth":"15",
+            "maxWidth":"17.5",
+        })
+        ETL.SubElement(root, 'Birds')
+        ETL.SubElement(root, 'Slingshot', {
+            "x":"-5",
+            "y":"-2.5",
+        })
+        ETL.SubElement(root, 'GameObjects')
+
+        self.root = root
+
+    def add_birds(self, type, num):
+        birds_node = self.root.find('Birds')
+        for _ in range(0, num):
+            ETL.SubElement(birds_node, "Bird", {"type": type})
+
+    def add_block(self, type, x, y, rotation=0, material=None):
+        block_node = self.root.find('GameObjects')
+
+        if type == "TNT":
+            ETL.SubElement(block_node, "TNT", {
+                "x": str(x),
+                "y": str(y),
+                "rotation": str(rotation),
+            })
+            return True
+        elif type == "Platform":
+            ETL.SubElement(block_node, "Platform", {
+                "type": "Platform",
+                "x": str(x),
+                "y": str(y),
+                "rotation": str(rotation),
+            })
+            return True
+        elif type == "Pig":
+            ETL.SubElement(block_node, "Platform", {
+                "type": "BasicSmall",
+                "x": str(x),
+                "y": str(y),
+                "material":"",
+                "rotation": str(rotation),
+            })
+            return True
+        elif material is not None:
+            ETL.SubElement(block_node, "Block", {
+                "type": str(type),
+                "material": str(material),
+                "x": str(x),
+                "y": str(y),
+                "rotation": str(rotation),
+            })
+            return True
+        
+        return False
+
+    def export(self, filename):
+        root = self.root
+        ETL.ElementTree(self.root).write(filename, xml_declaration=True, encoding='utf-16', method='xml', pretty_print=True)
 
 # Channel name
 channel_to_names = {
@@ -69,8 +143,8 @@ def level_to_data(file_path, out_path):
     # Output
     np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
 
-def data_to_level(file_path, out_path):
-    data = np.loadtxt(file_path, dtype=int, delimiter=',', encoding='utf8')
+def data_to_level(file_path, out_path, threshold=0.5):
+    data = np.loadtxt(file_path, dtype=float, delimiter=',', encoding='utf8')
     block_table = np.zeros((TRAIN_SCALE_HEIGHT, TRAIN_SCALE_WIDTH), dtype=int)
 
     # Preview the structure
@@ -80,7 +154,7 @@ def data_to_level(file_path, out_path):
             channel = np.argmax(data[:, index])
             
             # If there is no block, skip it
-            if data[channel, index] == 0:
+            if data[channel, index] < threshold:
                 continue
             
             block_table[x][y] = channel + 1
@@ -88,7 +162,7 @@ def data_to_level(file_path, out_path):
     # TODO:Tricks
 
     # Initialize the level
-    new_level = li.level()
+    new_level = level()
     new_level.add_birds("BirdRed", 1)
     new_level.add_birds("BirdBlack", 4)
     new_level.add_birds("BirdBlue", 2)
@@ -125,3 +199,5 @@ def data_to_level(file_path, out_path):
 
 if __name__ == "__main__":
     data_to_level("../../model/results/from_net_1.gz", "level-3.xml")
+    data_to_level("../../model/results/from_net_1_threshold_0.4.gz", "level-4.xml")
+    data_to_level("../../model/results/from_net_1_threshold_0.7.gz", "level-5.xml")

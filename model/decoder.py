@@ -11,7 +11,7 @@ else:
    saved_model = sys.argv[1]
 
 # Set number of levels
-batch_size = 3
+batch_size = 10
 
 # Set the parameters same as the used in training process
 map_size = 128
@@ -20,6 +20,8 @@ ngf = 32
 ngpu = 2
 n_extra_layers = 0
 z_dims = 21
+
+threshold = 0.7
 
 # Load Generator
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
@@ -34,16 +36,14 @@ if torch.cuda.is_available():
 # Generate
 results = netG(noise).data
 
-# Convert results
 for i, result in enumerate(results, 1):
-    temp = np.zeros((z_dims, map_size*map_size), dtype=int)
+    temp = np.zeros((z_dims, map_size*map_size), dtype=float)
 
     for x in range(map_size):
         for y in range(map_size):
             channel = torch.argmax(result[:,x,y])
-            if result[channel,x,y] < .6:
-                continue
+            channel_value = result[channel,x,y]
             index = x * map_size + y
-            temp[channel][index] = 1
+            temp[channel][index] = channel_value
     
-    np.savetxt('results/from_net_{}.gz'.format(i), temp, delimiter=",", fmt='%1d', encoding='utf8')
+    np.savetxt('results/from_net_{0:2d}.gz'.format(i), temp, delimiter=",", fmt='%.2f', encoding='utf8')
