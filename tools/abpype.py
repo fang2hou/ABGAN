@@ -16,6 +16,8 @@ TRAIN_SCALE_HEIGHT = 128
 # From level_io
 # https://github.com/fang2hou/Science-Birds-Edit-for-GCCE-2019
 # Easy-to-go class for building Science Birds Levels.
+
+
 class level():
     def __init__(self):
         # root
@@ -23,15 +25,15 @@ class level():
         # subelements
         ETL.SubElement(root, 'Camera', {
             # default camera
-            "x":"0",
-            "y":"-1",
-            "minWidth":"15",
-            "maxWidth":"17.5",
+            "x": "0",
+            "y": "-1",
+            "minWidth": "15",
+            "maxWidth": "17.5",
         })
         ETL.SubElement(root, 'Birds')
         ETL.SubElement(root, 'Slingshot', {
-            "x":"-5",
-            "y":"-2.5",
+            "x": "-5",
+            "y": "-2.5",
         })
         ETL.SubElement(root, 'GameObjects')
 
@@ -65,7 +67,7 @@ class level():
                 "type": "BasicSmall",
                 "x": str(x),
                 "y": str(y),
-                "material":"",
+                "material": "",
                 "rotation": str(rotation),
             })
             return True
@@ -78,12 +80,14 @@ class level():
                 "rotation": str(rotation),
             })
             return True
-        
+
         return False
 
     def export(self, filename):
         root = self.root
-        ETL.ElementTree(self.root).write(filename, xml_declaration=True, encoding='utf-16', method='xml', pretty_print=True)
+        ETL.ElementTree(self.root).write(filename, xml_declaration=True,
+                                         encoding='utf-16', method='xml', pretty_print=True)
+
 
 # Channel name
 channel_to_names = {
@@ -98,17 +102,22 @@ channel_to_names = {
 names_to_channel = dict([(n, c) for (c, n) in channel_to_names.items()])
 
 # Normalization
+
+
 def normalize_position(x, y):
-    data_x = round(TRAIN_SCALE_WIDTH * (x-WIDTH_MIN) / (WIDTH_MAX-WIDTH_MIN))
-    data_y = round(TRAIN_SCALE_HEIGHT * (y-HEIGHT_MIN) / (HEIGHT_MAX-HEIGHT_MIN))
+    data_x = round(TRAIN_SCALE_WIDTH * (x - WIDTH_MIN) / (WIDTH_MAX - WIDTH_MIN))
+    data_y = round(TRAIN_SCALE_HEIGHT * (y - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN))
     return data_x, data_y
 
+
 def inverse_normalize_postion(x, y):
-    level_x = x / 128. * (WIDTH_MAX-WIDTH_MIN) + WIDTH_MIN
-    level_y = y / 128. * (WIDTH_MAX-WIDTH_MIN) + WIDTH_MIN
+    level_x = x / 128. * (WIDTH_MAX - WIDTH_MIN) + WIDTH_MIN
+    level_y = y / 128. * (WIDTH_MAX - WIDTH_MIN) + WIDTH_MIN
     return level_x, level_y
 
 # Convert the level to input data
+
+
 def level_to_data(file_path, out_path):
     # Initialize the array
     data = np.zeros(
@@ -132,16 +141,17 @@ def level_to_data(file_path, out_path):
             rotation = int(float(game_object.get('rotation')))
             # Set the ratated block as another block type
             if rotation != 0:
-                channel = names_to_channel[game_object.get('type')+str(rotation)] - 1
+                channel = names_to_channel[game_object.get('type') + str(rotation)] - 1
         else:
             channel = names_to_channel[tag]
 
         # Save
-        index = (x-1) * TRAIN_SCALE_WIDTH + (y-1)
+        index = (x - 1) * TRAIN_SCALE_WIDTH + (y - 1)
         data[channel][index] = 1
 
     # Output
     np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
+
 
 def data_to_level(file_path, out_path, threshold=0.5):
     data = np.loadtxt(file_path, dtype=float, delimiter=',', encoding='utf8')
@@ -152,11 +162,11 @@ def data_to_level(file_path, out_path, threshold=0.5):
         for y in range(TRAIN_SCALE_WIDTH):
             index = x * TRAIN_SCALE_WIDTH + y
             channel = np.argmax(data[:, index])
-            
+
             # If there is no block, skip it
             if data[channel, index] < threshold:
                 continue
-            
+
             block_table[x][y] = channel + 1
 
     # TODO:Tricks
@@ -169,7 +179,7 @@ def data_to_level(file_path, out_path, threshold=0.5):
 
     for x in range(TRAIN_SCALE_HEIGHT):
         for y in range(TRAIN_SCALE_WIDTH):
-            real_x, real_y = inverse_normalize_postion(x+1, y+1)
+            real_x, real_y = inverse_normalize_postion(x + 1, y + 1)
 
             if block_table[x][y] == 0:
                 continue
@@ -196,8 +206,3 @@ def data_to_level(file_path, out_path, threshold=0.5):
                 print('ERROR: Create {} block failed.'.format(block_name))
 
     new_level.export(out_path)
-
-if __name__ == "__main__":
-    data_to_level("../../model/results/from_net_1.gz", "level-3.xml")
-    data_to_level("../../model/results/from_net_1_threshold_0.4.gz", "level-4.xml")
-    data_to_level("../../model/results/from_net_1_threshold_0.7.gz", "level-5.xml")
