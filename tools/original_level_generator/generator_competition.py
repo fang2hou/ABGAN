@@ -6,6 +6,8 @@ from math import sqrt, ceil, atan, atan2, cos, sin, pi, degrees, radians, tan
 from copy import deepcopy
 import itertools
 
+save_dir = "../data/orginal_levels/"
+
 # blocks number and size
 blocks = {'1':[0.84,0.84], '2':[0.85,0.43], '3':[0.43,0.85], '4':[0.43,0.43],
           '5':[0.22,0.22], '6':[0.43,0.22], '7':[0.22,0.43], '8':[0.85,0.22],
@@ -1655,7 +1657,6 @@ def protect_vulnerable_blocks1(complete_locations, complete_ground_locations, fi
                 while (number_attempts < max_number_attempts):
 
                     if (overlap == False):
-                        new_stack.append(new_block)
                         number_attempts = 0
                     overlap = False
                     choosen_item = choose_item(probability_table_blocks)
@@ -1893,7 +1894,7 @@ def protect_vulnerable_blocks2(complete_locations,final_platforms,final_pig_posi
 
 def write_level_xml(final_blocks, selected_other, final_pig_positions, final_platforms, number_birds, bird_order, final_materials, final_tnt_positions, extra_platforms_angled, current_level, restricted_combinations):
 
-    f = open("orginal_levels/level-%s.xml" % current_level, "w")
+    f = open(save_dir + "level-%s.xml" % current_level, "w")
 
     f.write('<?xml version="1.0" encoding="utf-8"?>\n')
     f.write('<Level width ="2" >\n')

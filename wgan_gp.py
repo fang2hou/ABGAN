@@ -20,6 +20,8 @@ import models.mlp as mlp
 
 # Run with "python main.py"
 
+data_dir = "data/original_data/"
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--nz', type=int, default=32,
                     help='size of the latent z vector')
@@ -66,57 +68,61 @@ if torch.cuda.is_available() and not opt.cuda:
 
 map_size = 128
 
-_, _, train_data_names = os.walk('../data/samples').__next__()
+_, _, train_data_names = os.walk(data_dir).__next__()
 
 X = []
 for train_data_name in train_data_names:
-    train_data = np.loadtxt('../data/samples/' + train_data_name, dtype=int, delimiter=',', encoding='utf8')
+    train_data = np.loadtxt(data_dir + train_data_name, dtype=int, delimiter=',', encoding='utf8')
     train_data = np.reshape(train_data, (21, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
-z_dims = 21 # Channels
+z_dims = 21  # Channels
 num_batches = X.shape[0] / opt.batchSize
 
 ngpu = int(opt.ngpu)
-nz   = int(opt.nz)
-ngf  = int(opt.ngf)
-ndf  = int(opt.ndf)
+nz = int(opt.nz)
+ngf = int(opt.ngf)
+ndf = int(opt.ndf)
 
 n_extra_layers = int(opt.n_extra_layers)
 
 # gradient penalty
+
+
 def calc_gradient_penalty(netD, input, fake):
     LAMBDA = 10
     alpha = torch.rand(opt.batchSize, 1, 1, 1)
     #alpha = alpha.expand(opt.batchSize, map_size)
     if opt.cuda:
-        alpha = alpha.cuda() 
+        alpha = alpha.cuda()
 
     interpolates = alpha * input + ((1 - alpha) * fake)
     interpolates.requires_grad = True
 
-    #if opt.cuda:
+    # if opt.cuda:
     #    interpolates = interpolates.cuda()
 
     disc_interpolates = netD(interpolates)
 
     if opt.cuda:
         gradients = autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                           grad_outputs=torch.ones(disc_interpolates.size()).cuda(), 
-                            create_graph=True, retain_graph=True, only_inputs=True)[0]
-    
+                                  grad_outputs=torch.ones(disc_interpolates.size()).cuda(),
+                                  create_graph=True, retain_graph=True, only_inputs=True)[0]
+
     else:
         gradients = autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                           grad_outputs=torch.ones(disc_interpolates.size()), 
-                            create_graph=True, retain_graph=True, only_inputs=True)[0]
+                                  grad_outputs=torch.ones(disc_interpolates.size()),
+                                  create_graph=True, retain_graph=True, only_inputs=True)[0]
 
     gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * LAMBDA
     return gradient_penalty
 
 # custom weights initialization called on netG and netD
+
+
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Conv') != -1:
@@ -124,6 +130,7 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
 
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
 
@@ -191,7 +198,7 @@ for epoch in range(opt.niter):
             for p in netD.parameters():
                 p.data.clamp(opt.clamp_lower, opt.clamp_upper)
 
-            data = X_train[i*opt.batchSize:(i+1)*opt.batchSize]
+            data = X_train[i * opt.batchSize:(i + 1) * opt.batchSize]
 
             i += 1
 
@@ -239,7 +246,6 @@ for epoch in range(opt.niter):
         errG.backward(one)
         optimizerG.step()
         gen_iterations += 1
-
 
         print('[%d/%d][%d/%d][%d] Loss_D: %f Loss_G: %f Loss_D_real: %f Loss_D_fake %f'
               % (epoch, opt.niter, i, num_batches, gen_iterations,

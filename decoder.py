@@ -8,7 +8,7 @@ if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
     saved_model = "saves/netG_epoch_750_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
-   saved_model = sys.argv[1]
+    saved_model = sys.argv[1]
 
 # Set number of levels
 batch_size = 10
@@ -28,7 +28,7 @@ netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
 netG.load_state_dict(torch.load(saved_model))
 noise = torch.Tensor(batch_size, nz, 1, 1).normal_(0, 1)
 
-# GPU Acceleration 
+# GPU Acceleration
 if torch.cuda.is_available():
     noise = noise.cuda()
     netG = netG.cuda()
@@ -37,13 +37,13 @@ if torch.cuda.is_available():
 results = netG(noise).data
 
 for i, result in enumerate(results, 1):
-    temp = np.zeros((z_dims, map_size*map_size), dtype=float)
+    temp = np.zeros((z_dims, map_size * map_size), dtype=float)
 
     for x in range(map_size):
         for y in range(map_size):
-            channel = torch.argmax(result[:,x,y])
-            channel_value = result[channel,x,y]
+            channel = torch.argmax(result[:, x, y])
+            channel_value = result[channel, x, y]
             index = x * map_size + y
             temp[channel][index] = channel_value
-    
+
     np.savetxt('results/from_net_{0:02d}.gz'.format(i), temp, delimiter=",", fmt='%.2f', encoding='utf8')
