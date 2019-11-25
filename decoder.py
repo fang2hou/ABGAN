@@ -1,49 +1,36 @@
-import torch
-import sys
-import models.dcgan as dcgan
-import numpy as np
+import os
+import time
+from sys import stdout, path
+from tools import abpype as ap
 
-# Check the parameter is legal or not
-if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/netG_epoch_750_32.pth"
-    #exit('USE: decoder.py MODEL.pth')
-else:
-    saved_model = sys.argv[1]
+data_directory = 'data/generated_data/'
+level_directory = 'data/generated_levels/'
 
-# Set number of levels
-batch_size = 10
+dirpath, _, filenames = os.walk(data_directory).__next__()
 
-# Set the parameters same as the used in training process
-map_size = 128
-nz = 32
-ngf = 32
-ngpu = 2
-n_extra_layers = 0
-z_dims = 21
+data_list = []
 
-threshold = 0.7
+# Filter
+for filename in filenames:
+    if filename[-3:] == '.gz':
+        data_list.append(filename)
 
-# Load Generator
-netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
-netG.load_state_dict(torch.load(saved_model))
-noise = torch.Tensor(batch_size, nz, 1, 1).normal_(0, 1)
+num_data = len(data_list)
+print('{} generated levels found.'.format(num_data))
 
-# GPU Acceleration
-if torch.cuda.is_available():
-    noise = noise.cuda()
-    netG = netG.cuda()
+convert_time = time.time()
 
-# Generate
-results = netG(noise).data
+num_converted = 0
+for index, data in enumerate(data_list, 3):
+    for test_threshold in range(1, 10, 1):
+        outpath = level_directory + 'level-{0:02d}-{1:.1f}.xml'.format(index, test_threshold * 0.1)
+        ap.data_to_level(dirpath + '/' + data, outpath, threshold=test_threshold * 0.1)
+        num_converted += 1
 
-for i, result in enumerate(results, 1):
-    temp = np.zeros((z_dims, map_size * map_size), dtype=float)
+        progress = num_converted / (num_data * 9)
+        stdout.write("\rProgress: {0:.1f} %".format(100 * progress))
+        stdout.flush()
 
-    for x in range(map_size):
-        for y in range(map_size):
-            channel = torch.argmax(result[:, x, y])
-            channel_value = result[channel, x, y]
-            index = x * map_size + y
-            temp[channel][index] = channel_value
+convert_time = time.time() - convert_time
 
-    np.savetxt('results/from_net_{0:02d}.gz'.format(i), temp, delimiter=",", fmt='%.2f', encoding='utf8')
+stdout.write("\nDone! Converted {0} data in {1:.3f}s.\n".format(num_data, convert_time))
