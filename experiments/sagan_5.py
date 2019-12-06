@@ -18,7 +18,7 @@ from torch.autograd import Variable
 import models.sagan as dcgan
 import models.mlp as mlp
 
-data_dir = "data/original_data_21/"
+data_dir = "data/original_data_5/"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--nz', type=int, default=32,
@@ -70,13 +70,13 @@ X = []
 for train_data_name in train_data_names:
     train_data = np.loadtxt(data_dir + train_data_name,
                             dtype=int, delimiter=',', encoding='utf8')
-    train_data = np.reshape(train_data, (21, 128, 128))
+    train_data = np.reshape(train_data, (5, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
-z_dims = 21  # Channels
+z_dims = 5  # Channels
 num_batches = X.shape[0] / opt.batchSize
 
 ngpu = int(opt.ngpu)
@@ -253,7 +253,7 @@ for epoch in range(opt.niter):
             with torch.no_grad():
                 #fake = netG(Variable(fixed_noise, volatile=True))
                 fake = netG(fixed_noise)
-            torch.save(netG.state_dict(), 'saves/SAGAN_21/netG_epoch_{}_{}.pth'.format(
+            torch.save(netG.state_dict(), 'saves/SAGAN_5/netG_epoch_{}_{}.pth'.format(
                 gen_iterations, opt.nz))
 
     # do checkpointing

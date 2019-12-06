@@ -1,11 +1,11 @@
 import torch
 import sys
-import models.dcgan as dcgan
+import models.dcgan_gp as dcgan
 import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/netG_epoch_750_32.pth"
+    saved_model = "saves/WGAN_GP_5/netG_epoch_1000_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -21,7 +21,7 @@ ngpu = 2
 n_extra_layers = 0
 z_dims = 21
 
-threshold = 0.7
+threshold = .7
 
 # Load Generator
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
@@ -59,5 +59,5 @@ for i, result in enumerate(results, 1):
             index = x * map_size + y
             temp[channel][index] = channel_value
 
-    np.savetxt('data/generated_data_wgan_5/from_net_{0:02d}.gz'.format(i),
+    np.savetxt('data/generated_data_wgan_gp_21/from_net_{0:02d}.gz'.format(i),
                temp, delimiter=",", fmt='%.2f', encoding='utf8')

@@ -255,7 +255,7 @@ for epoch in range(opt.niter):
             with torch.no_grad():
                 #fake = netG(Variable(fixed_noise, volatile=True))
                 fake = netG(fixed_noise)
-            torch.save(netG.state_dict(), 'saves/WGAN-GP_21/netG_epoch_{}_{}.pth'.format(
+            torch.save(netG.state_dict(), 'saves/WGAN_GP_21/netG_epoch_{}_{}.pth'.format(
                 gen_iterations, opt.nz))
 
     # do checkpointing
