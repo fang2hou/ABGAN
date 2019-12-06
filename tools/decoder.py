@@ -3,8 +3,8 @@ import time
 from sys import stdout, path
 from tools import abpype as ap
 
-data_directory = 'data/generated_data_5/'
-level_directory = 'data/generated_levels/'
+data_directory = 'data/generated_data_wgan_gp_5/'
+level_directory = 'data/generated_levels_wgan_gp_5/'
 
 dirpath, _, filenames = os.walk(data_directory).__next__()
 

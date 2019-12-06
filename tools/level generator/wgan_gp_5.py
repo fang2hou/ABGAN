@@ -5,7 +5,7 @@ import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/WGAN_GP_5/netG_epoch_1000_32.pth"
+    saved_model = "saves/WGAN_GP_5/netG_epoch_500_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -19,9 +19,9 @@ nz = 32
 ngf = 32
 ngpu = 2
 n_extra_layers = 0
-z_dims = 21
+z_dims = 5
 
-threshold = .7
+threshold = .5
 
 # Load Generator
 netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
@@ -37,7 +37,7 @@ if torch.cuda.is_available():
 results = netG(noise).data
 
 for i, result in enumerate(results, 1):
-    temp = np.zeros((z_dims, map_size * map_size), dtype=float)
+    temp = np.zeros((21, map_size * map_size), dtype=float)
 
     for x in range(map_size):
         for y in range(map_size):
@@ -45,19 +45,29 @@ for i, result in enumerate(results, 1):
             reliablity_one = []
             reliablity_zero = []
 
-            for i in result[:, x, y]:
-                if i > threshold:
+            for j in result[:, x, y]:
+                if j > threshold:
                     temp_binary_type += '1'
-                    reliablity_one.append(i)
+                    reliablity_one.append(j)
                 else:
                     temp_binary_type += '0'
                     reliablity_zero.append(i)
 
             channel = int(temp_binary_type, 2)
-            channel_value = sum(reliablity_one)/len(reliablity_one) - \
-                sum(reliablity_zero)/len(reliablity_zero)
-            index = x * map_size + y
-            temp[channel][index] = channel_value
+            if channel <= 21 and channel >= 0:
+                if len(reliablity_one) != 0:
+                    one_avg = sum(reliablity_one)/len(reliablity_one)
+                else:
+                    one_avg = 0
 
-    np.savetxt('data/generated_data_wgan_gp_21/from_net_{0:02d}.gz'.format(i),
+                if len(reliablity_zero) != 0:
+                    zero_avg = sum(reliablity_zero)/len(reliablity_zero)
+                else:
+                    zero_avg = 0
+
+                channel_value = one_avg - zero_avg
+                index = x * map_size + y
+                temp[channel][index] = channel_value
+
+    np.savetxt('data/generated_data_wgan_gp_5/from_net_{0:02d}.gz'.format(i),
                temp, delimiter=",", fmt='%.2f', encoding='utf8')
