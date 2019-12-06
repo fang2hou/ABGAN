@@ -5,7 +5,7 @@ import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/WGAN_GP_5/netG_epoch_500_32.pth"
+    saved_model = "saves/WGAN_GP_5/netG_epoch_50_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -51,10 +51,10 @@ for i, result in enumerate(results, 1):
                     reliablity_one.append(j)
                 else:
                     temp_binary_type += '0'
-                    reliablity_zero.append(i)
+                    reliablity_zero.append(j)
 
             channel = int(temp_binary_type, 2)
-            if channel <= 21 and channel >= 0:
+            if channel < 21 and channel >= 0:
                 if len(reliablity_one) != 0:
                     one_avg = sum(reliablity_one)/len(reliablity_one)
                 else:
