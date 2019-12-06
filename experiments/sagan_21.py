@@ -18,9 +18,7 @@ from torch.autograd import Variable
 import models.sagan as dcgan
 import models.mlp as mlp
 
-# Run with "python main.py"
-
-data_dir = "data/original_data/"
+data_dir = "data/original_data_21/"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--nz', type=int, default=32,
@@ -257,7 +255,7 @@ for epoch in range(opt.niter):
             with torch.no_grad():
                 #fake = netG(Variable(fixed_noise, volatile=True))
                 fake = netG(fixed_noise)
-            torch.save(netG.state_dict(), 'saves-SAGAN/netG_epoch_{}_{}.pth'.format(
+            torch.save(netG.state_dict(), 'saves/SAGAN_21/netG_epoch_{}_{}.pth'.format(
                 gen_iterations, opt.nz))
 
     # do checkpointing

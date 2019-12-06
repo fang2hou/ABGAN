@@ -105,8 +105,10 @@ names_to_channel = dict([(n, c) for (c, n) in channel_to_names.items()])
 
 
 def normalize_position(x, y):
-    data_x = round(TRAIN_SCALE_WIDTH * (x - WIDTH_MIN) / (WIDTH_MAX - WIDTH_MIN))
-    data_y = round(TRAIN_SCALE_HEIGHT * (y - HEIGHT_MIN) / (HEIGHT_MAX - HEIGHT_MIN))
+    data_x = round(TRAIN_SCALE_WIDTH * (x - WIDTH_MIN) /
+                   (WIDTH_MAX - WIDTH_MIN))
+    data_y = round(TRAIN_SCALE_HEIGHT * (y - HEIGHT_MIN) /
+                   (HEIGHT_MAX - HEIGHT_MIN))
     return data_x, data_y
 
 
@@ -141,13 +143,56 @@ def level_to_data(file_path, out_path):
             rotation = int(float(game_object.get('rotation')))
             # Set the ratated block as another block type
             if rotation != 0:
-                channel = names_to_channel[game_object.get('type') + str(rotation)] - 1
+                channel = names_to_channel[game_object.get(
+                    'type') + str(rotation)] - 1
         else:
             channel = names_to_channel[tag]
 
         # Save
         index = (x - 1) * TRAIN_SCALE_WIDTH + (y - 1)
         data[channel][index] = 1
+
+    # Output
+    np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
+
+
+def level_to_data_five(file_path, out_path):
+
+    # bin(x)[2:] will return a string of binary expression of x.
+
+    # Initialize the array
+    data = np.zeros(
+        (len(bin(len(channel_to_names))[2:]), TRAIN_SCALE_WIDTH * TRAIN_SCALE_HEIGHT), dtype=int)
+
+    # Parsing
+    root = ET.parse(file_path).getroot()
+    game_objects = root.find('GameObjects')
+
+    for game_object in game_objects:
+        tag = game_object.tag
+        x = float(game_object.get('x'))
+        y = float(game_object.get('y'))
+
+        # Convert the position to the data scale
+        x, y = normalize_position(x, y)
+
+        # Find channel which is belongs to
+        if tag == 'Block':
+            channel = names_to_channel[game_object.get('type')] - 1
+            rotation = int(float(game_object.get('rotation')))
+            # Set the ratated block as another block type
+            if rotation != 0:
+                channel = names_to_channel[game_object.get(
+                    'type') + str(rotation)] - 1
+        else:
+            channel = names_to_channel[tag]
+
+        # Save
+        index = (x - 1) * TRAIN_SCALE_WIDTH + (y - 1)
+        channel_binary = bin(channel)[2:]
+        for channel_index, is_used in enumerate(channel_binary, 0):
+            if is_used == '1':
+                data[channel_index][index] = 1
 
     # Output
     np.savetxt(out_path, data, delimiter=",", fmt='%1d', encoding='utf8')
@@ -199,9 +244,11 @@ def data_to_level(file_path, out_path, threshold=0.5):
             ]
 
             if block_name in normal_blocks:
-                new_level.add_block(type=block_name, x=real_x, y=real_y, material="ice")
+                new_level.add_block(type=block_name, x=real_x,
+                                    y=real_y, material="ice")
             elif block_name in rotate_blocks:
-                new_level.add_block(type=block_name[:-2], x=real_x, y=real_y, rotation=90, material="ice")
+                new_level.add_block(
+                    type=block_name[:-2], x=real_x, y=real_y, rotation=90, material="ice")
             else:
                 print('ERROR: Create {} block failed.'.format(block_name))
 

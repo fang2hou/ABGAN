@@ -41,9 +41,23 @@ for i, result in enumerate(results, 1):
 
     for x in range(map_size):
         for y in range(map_size):
-            channel = torch.argmax(result[:, x, y])
-            channel_value = result[channel, x, y]
+            temp_binary_type = ''
+            reliablity_one = []
+            reliablity_zero = []
+
+            for i in result[:, x, y]:
+                if i > threshold:
+                    temp_binary_type += '1'
+                    reliablity_one.append(i)
+                else:
+                    temp_binary_type += '0'
+                    reliablity_zero.append(i)
+
+            channel = int(temp_binary_type, 2)
+            channel_value = sum(reliablity_one)/len(reliablity_one) - \
+                sum(reliablity_zero)/len(reliablity_zero)
             index = x * map_size + y
             temp[channel][index] = channel_value
 
-    np.savetxt('results/from_net_{0:02d}.gz'.format(i), temp, delimiter=",", fmt='%.2f', encoding='utf8')
+    np.savetxt('data/generated_data_wgan_5/from_net_{0:02d}.gz'.format(i),
+               temp, delimiter=",", fmt='%.2f', encoding='utf8')

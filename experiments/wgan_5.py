@@ -1,26 +1,18 @@
+# DCGAN for Science Birds game level
 import os
-import math
-import json
 import argparse
 import random
 import numpy as np
-import matplotlib.pyplot as plt
 import torch
-import torch.nn as nn
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
-import torch.autograd as autograd
 from torch.autograd import Variable
-import models.dcgan_gp as dcgan
-import models.mlp as mlp
+import models.dcgan as dcgan
 
 # Run with "python main.py"
 
-data_dir = "data/original_data/"
+data_dir = "data/original_data_5/"
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--nz', type=int, default=32,
@@ -32,9 +24,9 @@ parser.add_argument('--batchSize', type=int,
 parser.add_argument('--niter', type=int, default=5000,
                     help='number of epochs to train for')
 parser.add_argument('--lrD', type=float, default=0.00005,
-                    help='learning rate for Critic, default=0.00005')
+                    help='learning rate for Critic, default=1')
 parser.add_argument('--lrG', type=float, default=0.00005,
-                    help='learning rate for Generator, default=0.00005')
+                    help='learning rate for Generator, default=1')
 parser.add_argument('--beta1', type=float, default=0.5,
                     help='beta1 for adam. default=0.5')
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
@@ -44,8 +36,8 @@ parser.add_argument('--netG', default='',
                     help="path to netG (to continue training)")
 parser.add_argument('--netD', default='',
                     help="path to netD (to continue training)")
-parser.add_argument('--clamp_lower', type=float, default=-0.12)
-parser.add_argument('--clamp_upper', type=float, default=0.12)
+parser.add_argument('--clamp_lower', type=float, default=-0.01)
+parser.add_argument('--clamp_upper', type=float, default=0.01)
 parser.add_argument('--Diters', type=int, default=5,
                     help='number of D iters per each G iter')
 
@@ -55,8 +47,6 @@ parser.add_argument('--adam', action='store_true',
                     help='Whether to use adam (default is rmsprop)')
 opt = parser.parse_args()
 print(opt)
-
-os.system('mkdir results')
 
 opt.manualSeed = random.randint(1, 10000)  # fix seed
 print("Random Seed: ", opt.manualSeed)
@@ -72,14 +62,15 @@ _, _, train_data_names = os.walk(data_dir).__next__()
 
 X = []
 for train_data_name in train_data_names:
-    train_data = np.loadtxt(data_dir + train_data_name, dtype=int, delimiter=',', encoding='utf8')
-    train_data = np.reshape(train_data, (21, 128, 128))
+    train_data = np.loadtxt(data_dir + train_data_name,
+                            dtype=int, delimiter=',', encoding='utf8')
+    train_data = np.reshape(train_data, (5, 128, 128))
     train_data = torch.from_numpy(train_data)
     X.append(train_data)
 
 X = torch.stack(X, dim=0)
 
-z_dims = 21  # Channels
+z_dims = 5  # Channels
 num_batches = X.shape[0] / opt.batchSize
 
 ngpu = int(opt.ngpu)
@@ -88,37 +79,6 @@ ngf = int(opt.ngf)
 ndf = int(opt.ndf)
 
 n_extra_layers = int(opt.n_extra_layers)
-
-# gradient penalty
-
-
-def calc_gradient_penalty(netD, input, fake):
-    LAMBDA = 10
-    alpha = torch.rand(opt.batchSize, 1, 1, 1)
-    #alpha = alpha.expand(opt.batchSize, map_size)
-    if opt.cuda:
-        alpha = alpha.cuda()
-
-    interpolates = alpha * input + ((1 - alpha) * fake)
-    interpolates.requires_grad = True
-
-    # if opt.cuda:
-    #    interpolates = interpolates.cuda()
-
-    disc_interpolates = netD(interpolates)
-
-    if opt.cuda:
-        gradients = autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                                  grad_outputs=torch.ones(disc_interpolates.size()).cuda(),
-                                  create_graph=True, retain_graph=True, only_inputs=True)[0]
-
-    else:
-        gradients = autograd.grad(outputs=disc_interpolates, inputs=interpolates,
-                                  grad_outputs=torch.ones(disc_interpolates.size()),
-                                  create_graph=True, retain_graph=True, only_inputs=True)[0]
-
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * LAMBDA
-    return gradient_penalty
 
 # custom weights initialization called on netG and netD
 
@@ -223,11 +183,6 @@ for epoch in range(opt.niter):
             inputv = fake
             errD_fake = netD(inputv)
             errD_fake.backward(mone)
-
-            # train with gradient penalty
-            gradient_penalty = calc_gradient_penalty(netD, inputv, fake)
-            gradient_penalty.backward()
-
             errD = errD_real - errD_fake
             optimizerD.step()
 
@@ -252,10 +207,9 @@ for epoch in range(opt.niter):
                  errD.data[0], errG.data[0], errD_real.data[0], errD_fake.data[0]))
         if gen_iterations % 50 == 0:  # was 500
             with torch.no_grad():
-                #fake = netG(Variable(fixed_noise, volatile=True))
                 fake = netG(fixed_noise)
-            torch.save(netG.state_dict(), 'saves/netG_epoch_{}_{}.pth'.format(
-                gen_iterations, opt.nz))
+            torch.save(netG.state_dict(
+            ), 'saves/WGAN_5/netG_epoch_{}_{}.pth'.format(gen_iterations, opt.nz))
 
     # do checkpointing
     #torch.save(netG.state_dict(), '{0}/netG_epoch_{1}.pth'.format(opt.experiment, epoch))
