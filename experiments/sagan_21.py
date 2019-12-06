@@ -27,11 +27,11 @@ parser.add_argument('--ngf', type=int, default=32)
 parser.add_argument('--ndf', type=int, default=32)
 parser.add_argument('--batchSize', type=int,
                     default=30, help='input batch size')
-parser.add_argument('--niter', type=int, default=5000,
+parser.add_argument('--niter', type=int, default=2000,
                     help='number of epochs to train for')
-parser.add_argument('--lrD', type=float, default=0.00005,
+parser.add_argument('--lrD', type=float, default=0.000003,
                     help='learning rate for Critic, default=0.00005')
-parser.add_argument('--lrG', type=float, default=0.00005,
+parser.add_argument('--lrG', type=float, default=0.000003,
                     help='learning rate for Generator, default=0.00005')
 parser.add_argument('--beta1', type=float, default=0.5,
                     help='beta1 for adam. default=0.5')
