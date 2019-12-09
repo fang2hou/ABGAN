@@ -4,6 +4,7 @@ from lxml import etree as ETL
 import xml.dom.minidom as MD
 import os
 import numpy as np
+import random
 
 WIDTH_MIN = 0
 WIDTH_MAX = 8.5
@@ -101,6 +102,27 @@ channel_to_names = {
 
 names_to_channel = dict([(n, c) for (c, n) in channel_to_names.items()])
 
+channel_to_names_five = {
+    0b00001: 'SquareHole', 0b00010: 'SquareSmall',
+    0b00100: 'SquareTiny', 0b00101: 'TNT',
+
+    0b00111: 'RectBig',
+    0b01111: 'RectTiny', 0b01110: 'RectMedium',
+    0b11111: 'RectSmall', 0b01101: 'RectFat',
+
+    0b00011: 'RectBig90',
+    0b01011: 'RectTiny90', 0b01010: 'RectMedium90',
+    0b11011: 'RectSmall90', 0b01001: 'RectFat90',
+
+    0b00110: 'Pig', 0b01000: 'Circle',
+    0b01100: 'CircleSmall', 0b10000: 'Platform',
+    0b10001: 'TriangleHole', 0b10010: 'Triangle',
+    0b10011: 'Triangle90',
+}
+
+names_to_channel_five = dict([(n, c) for (c, n) in channel_to_names_five.items()])
+
+
 # Normalization
 
 
@@ -117,7 +139,18 @@ def inverse_normalize_postion(x, y):
     level_y = y / 128. * (WIDTH_MAX - WIDTH_MIN) + WIDTH_MIN
     return level_x, level_y
 
-# Convert the level to input data
+
+def get_random_material():
+    material = random.randrange(3)
+
+    if material == 0:
+        material = 'ice'
+    elif material == 1:
+        material = 'wood'
+    else:
+        material = 'stone'
+
+    return material
 
 
 def level_to_data(file_path, out_path):
@@ -157,7 +190,6 @@ def level_to_data(file_path, out_path):
 
 
 def level_to_data_five(file_path, out_path):
-
     # bin(x)[2:] will return a string of binary expression of x.
 
     # Initialize the array
@@ -178,14 +210,14 @@ def level_to_data_five(file_path, out_path):
 
         # Find channel which is belongs to
         if tag == 'Block':
-            channel = names_to_channel[game_object.get('type')] - 1
+            channel = names_to_channel_five[game_object.get('type')] - 1
             rotation = int(float(game_object.get('rotation')))
             # Set the ratated block as another block type
             if rotation != 0:
-                channel = names_to_channel[game_object.get(
+                channel = names_to_channel_five[game_object.get(
                     'type') + str(rotation)] - 1
         else:
-            channel = names_to_channel[tag]
+            channel = names_to_channel_five[tag]
 
         # Save
         index = (x - 1) * TRAIN_SCALE_WIDTH + (y - 1)
@@ -255,16 +287,83 @@ def data_to_level(file_path, out_path, threshold=0.5):
 
 def data_to_level_ruby(file_path, out_path, limited_num=30):
     data = np.loadtxt(file_path, dtype=float, delimiter=',', encoding='utf8')
-    temp_reliability = []
+    temp_block_table = np.zeros(TRAIN_SCALE_HEIGHT * TRAIN_SCALE_WIDTH, dtype=float)
+    block_table = np.zeros((TRAIN_SCALE_HEIGHT, TRAIN_SCALE_WIDTH), dtype=int)
 
     # Preview the structure
-    for i in range(len(data[0, :])):
-        reliability = max(data[:, i])
-        if reliability > 0:
-            temp_reliability.append(reliability)
+    for x in range(TRAIN_SCALE_HEIGHT):
+        for y in range(TRAIN_SCALE_HEIGHT):
+            index = x * TRAIN_SCALE_WIDTH + y
+            reliability = max(data[:, index])
+
+            if not np.isnan(reliability):
+                temp_ruby_value = 1
+                good_ruby = 50
+
+                if x < good_ruby:
+                    temp_ruby_value *= x / good_ruby
+                elif x > TRAIN_SCALE_HEIGHT - good_ruby:
+                    temp_ruby_value *= (TRAIN_SCALE_HEIGHT - x) / good_ruby
+
+                if y < good_ruby:
+                    temp_ruby_value *= y / good_ruby
+                elif y > TRAIN_SCALE_HEIGHT - good_ruby:
+                    temp_ruby_value *= (TRAIN_SCALE_HEIGHT - y) / good_ruby
+
+                temp_block_table[index] = reliability * temp_ruby_value
+            else:
+                temp_block_table[index] = 0
 
     # Find the threshold
+    temp_reliability = temp_block_table.copy()
     temp_reliability.sort()
     temp_threshold = temp_reliability[-limited_num]
 
-    data_to_level(file_path, out_path, temp_threshold)
+    for x in range(TRAIN_SCALE_HEIGHT):
+        for y in range(TRAIN_SCALE_HEIGHT):
+            index = x * TRAIN_SCALE_WIDTH + y
+
+            # If there is no block, skip it
+            if temp_block_table[index] >= temp_threshold:
+                channel = np.argmax(data[:, index])
+                block_table[x, y] = channel + 1
+
+    # TODO:Tricks
+
+    # Initialize the level
+    new_level = level()
+    new_level.add_birds("BirdRed", 1)
+    new_level.add_birds("BirdBlack", 4)
+    new_level.add_birds("BirdBlue", 2)
+
+    for x in range(TRAIN_SCALE_HEIGHT):
+        for y in range(TRAIN_SCALE_WIDTH):
+            real_x, real_y = inverse_normalize_postion(x + 1, y + 1)
+
+            if block_table[x][y] == 0:
+                continue
+
+            block_name = channel_to_names[block_table[x][y]]
+
+            normal_blocks = [
+                'SquareHole', 'RectFat', 'SquareSmall', 'SquareTiny', 'RectTiny',
+                'RectSmall', 'RectSmall', 'RectMedium', 'RectBig',
+                'TriangleHole', 'Triangle', 'Circle', 'CircleSmall',
+                'TNT', 'Pig', 'Platform',
+            ]
+
+            rotate_blocks = [
+                'RectFat90', 'RectTiny90', 'RectSmall90', 'RectMedium90', 'RectBig90',
+                'Triangle90'
+            ]
+
+            if block_name in normal_blocks:
+                new_level.add_block(type=block_name, x=real_x,
+                                    y=real_y, material=get_random_material())
+            elif block_name in rotate_blocks:
+                new_level.add_block(
+                    type=block_name[:-2], x=real_x, y=real_y, rotation=90, material="ice")
+            else:
+                print('ERROR: Create {} block failed.'.format(block_name))
+
+    new_level.export(out_path)
