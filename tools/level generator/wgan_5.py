@@ -1,6 +1,6 @@
 import torch
 import sys
-import models.dcgan as dcgan
+import abganlibs.models.dcgan as dcgan
 import numpy as np
 
 # Check the parameter is legal or not
@@ -54,8 +54,8 @@ for i, result in enumerate(results, 1):
                     reliablity_zero.append(i)
 
             channel = int(temp_binary_type, 2)
-            channel_value = sum(reliablity_one)/len(reliablity_one) - \
-                sum(reliablity_zero)/len(reliablity_zero)
+            channel_value = sum(reliablity_one) / len(reliablity_one) - \
+                sum(reliablity_zero) / len(reliablity_zero)
             index = x * map_size + y
             temp[channel][index] = channel_value
 

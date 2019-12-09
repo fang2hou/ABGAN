@@ -1,7 +1,7 @@
 import os
 import time
 from sys import stdout
-from tools import abpype as ap
+import abganlibs.abpype as ap
 
 data_directory = 'data/original_data_21/'
 level_directory = 'data/original_levels/'

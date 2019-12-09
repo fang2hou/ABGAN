@@ -1,5 +1,5 @@
-#This does a lhc sample of the latent vector space in order to get a rough estimate of the variability of different
-#levels produced
+# This does a lhc sample of the latent vector space in order to get a rough estimate of the variability of different
+# levels produced
 
 #import torch
 #import torchvision.utils as vutils
@@ -8,7 +8,7 @@
 #import sys
 #import json
 #import numpy
-#import models.dcgan as dcgan
+#import abganlibs.models.dcgan as dcgan
 
 import random
 

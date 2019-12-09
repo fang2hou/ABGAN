@@ -15,8 +15,8 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 import torch.autograd as autograd
 from torch.autograd import Variable
-import models.dcgan_gp as dcgan
-import models.mlp as mlp
+import abganlibs.models.dcgan_gp as dcgan
+import abganlibs.models.mlp as mlp
 
 # Run with "python main.py"
 

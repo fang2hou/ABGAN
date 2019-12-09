@@ -1,6 +1,6 @@
 import torch
 import sys
-import models.sagan as dcgan
+import abganlibs.models.sagan as dcgan
 import numpy as np
 
 # Check the parameter is legal or not

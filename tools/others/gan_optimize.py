@@ -9,7 +9,7 @@ from torch.autograd import Variable
 import sys
 import json
 import numpy
-import models.dcgan as dcgan
+import abganlibs.models.dcgan as dcgan
 import cma
 import random
 import math

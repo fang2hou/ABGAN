@@ -8,7 +8,7 @@ import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 from torch.autograd import Variable
-import models.dcgan as dcgan
+import abganlibs.models.dcgan as dcgan
 
 # Run with "python main.py"
 
