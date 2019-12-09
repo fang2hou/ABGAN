@@ -1,3 +1,3 @@
 call activate fang
-export PYTHONPATH=models:tools:$PYTHONPATH
+export PYTHONPATH=abganlibs:$PYTHONPATH
 python experiments/wgan_gp_5.py

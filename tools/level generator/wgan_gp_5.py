@@ -5,7 +5,7 @@ import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/WGAN_GP_5/netG_epoch_50_32.pth"
+    saved_model = "saves/WGAN_GP_5/netG_epoch_500_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -45,7 +45,10 @@ for i, result in enumerate(results, 1):
             reliablity_one = []
             reliablity_zero = []
 
-            for j in result[:, x, y]:
+            temp_max = result[:, x, y].max()
+            temp_result = result[:, x, y] / temp_max
+
+            for j in temp_result:
                 if j > threshold:
                     temp_binary_type += '1'
                     reliablity_one.append(j)
@@ -56,18 +59,18 @@ for i, result in enumerate(results, 1):
             channel = int(temp_binary_type, 2)
             if channel < 21 and channel >= 0:
                 if len(reliablity_one) != 0:
-                    one_avg = sum(reliablity_one)/len(reliablity_one)
+                    one_avg = sum(reliablity_one) / len(reliablity_one)
                 else:
                     one_avg = 0
 
                 if len(reliablity_zero) != 0:
-                    zero_avg = sum(reliablity_zero)/len(reliablity_zero)
+                    zero_avg = sum(reliablity_zero) / len(reliablity_zero)
                 else:
                     zero_avg = 0
 
                 channel_value = one_avg - zero_avg
                 index = x * map_size + y
-                temp[channel][index] = channel_value
+                temp[channel][index] = channel_value * temp_max
 
     np.savetxt('data/generated_data_wgan_gp_5/from_net_{0:02d}.gz'.format(i),
                temp, delimiter=",", fmt='%.2f', encoding='utf8')

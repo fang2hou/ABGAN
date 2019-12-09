@@ -209,10 +209,8 @@ def data_to_level(file_path, out_path, threshold=0.5):
             channel = np.argmax(data[:, index])
 
             # If there is no block, skip it
-            if data[channel, index] < threshold:
-                continue
-
-            block_table[x][y] = channel + 1
+            if data[channel, index] >= threshold:
+                block_table[x][y] = channel + 1
 
     # TODO:Tricks
 
@@ -253,3 +251,20 @@ def data_to_level(file_path, out_path, threshold=0.5):
                 print('ERROR: Create {} block failed.'.format(block_name))
 
     new_level.export(out_path)
+
+
+def data_to_level_ruby(file_path, out_path, limited_num=30):
+    data = np.loadtxt(file_path, dtype=float, delimiter=',', encoding='utf8')
+    temp_reliability = []
+
+    # Preview the structure
+    for i in range(len(data[0, :])):
+        reliability = max(data[:, i])
+        if reliability > 0:
+            temp_reliability.append(reliability)
+
+    # Find the threshold
+    temp_reliability.sort()
+    temp_threshold = temp_reliability[-limited_num]
+
+    data_to_level(file_path, out_path, temp_threshold)

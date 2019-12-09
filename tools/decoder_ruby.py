@@ -25,16 +25,14 @@ convert_time = time.time()
 
 num_converted = 0
 for index, data in enumerate(data_list, 3):
-    for test_threshold in range(1, 10, 1):
-        outpath = level_directory + \
-            'level-{0:02d}-{1:.1f}.xml'.format(index, test_threshold * 0.1)
-        ap.data_to_level(dirpath + '/' + data, outpath,
-                         threshold=test_threshold * 0.1)
-        num_converted += 1
+    outpath = level_directory + \
+        'level-{0:02d}.xml'.format(index)
+    ap.data_to_level_ruby(dirpath + '/' + data, outpath)
+    num_converted += 1
 
-        progress = num_converted / (num_data * 9)
-        stdout.write("\rProgress: {0:.1f} %".format(100 * progress))
-        stdout.flush()
+    progress = num_converted / num_data
+    stdout.write("\rProgress: {0:.1f} %".format(100 * progress))
+    stdout.flush()
 
 convert_time = time.time() - convert_time
 
