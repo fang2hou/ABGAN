@@ -3,11 +3,11 @@ import time
 from sys import stdout, path
 import abganlibs.abpype as ap
 
-# data_directory = 'data/generated_data_sagan_21/'
-# level_directory = 'data/generated_levels_sagan_21/'
+data_directory = 'data/generated_data_sagan_5/'
+level_directory = 'data/generated_levels_sagan_5/'
 
-data_directory = 'data/generated_data_wgan_gp_5/'
-level_directory = 'data/generated_levels_wgan_gp_5/'
+#data_directory = 'data/generated_data_wgan_gp_5/'
+#level_directory = 'data/generated_levels_wgan_gp_5/'
 
 dirpath, _, filenames = os.walk(data_directory).__next__()
 
