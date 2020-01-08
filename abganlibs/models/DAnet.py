@@ -48,14 +48,16 @@ class Self_Attn(nn.Module):
 
 class CAM_Module(nn.Module):
     """ Channel attention module"""
-    def __init__(self, in_dim):
+
+    def __init__(self, in_dim, activation):
         super(CAM_Module, self).__init__()
         self.chanel_in = in_dim
-
+        self.activation = activation
 
         self.gamma = nn.Parameter(torch.zeros(1))
-        self.softmax  = nn.Softmax(dim=-1)
-    def forward(self,x):
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
         """
             inputs :
                 x : input feature maps( B X C X H X W)
@@ -67,7 +69,8 @@ class CAM_Module(nn.Module):
         proj_query = x.view(m_batchsize, C, -1)
         proj_key = x.view(m_batchsize, C, -1).permute(0, 2, 1)
         energy = torch.bmm(proj_query, proj_key)
-        energy_new = torch.max(energy, -1, keepdim=True)[0].expand_as(energy)-energy
+        energy_new = torch.max(
+            energy, -1, keepdim=True)[0].expand_as(energy)-energy
         attention = self.softmax(energy_new)
         proj_value = x.view(m_batchsize, C, -1)
 
@@ -114,6 +117,7 @@ class DCGAN_D(nn.Module):
             csize = csize / 2
 
         main.add_module('attn', Self_Attn(512, 'relu'))
+        main.add_module('CAM', CAM_Module(512, 'relu'))
 
         # state size. K x 4 x 4
         main.add_module('final_{0}-{1}_conv'.format(cndf, 1),
@@ -172,6 +176,7 @@ class DCGAN_G(nn.Module):
                             nn.ReLU(True))
 
         main.add_module('attn', Self_Attn(32, 'relu'))
+        main.add_module('CAM', CAM_Module(32, 'relu'))
 
         main.add_module('final_{0}-{1}_convt'.format(cngf, nc),
                         nn.ConvTranspose2d(cngf, nc, 4, 2, 1, bias=False))
