@@ -6,7 +6,7 @@ from math import sqrt, ceil, atan, atan2, cos, sin, pi, degrees, radians, tan
 from copy import deepcopy
 import itertools
 
-save_dir = "../data/orginal_levels/"
+save_dir = "../../data/original_levels_2/"
 
 # blocks number and size
 blocks = {'1':[0.84,0.84], '2':[0.85,0.43], '3':[0.43,0.85], '4':[0.43,0.43],

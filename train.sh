@@ -1,4 +1,4 @@
 call activate fang
 export PYTHONPATH=abganlibs:$PYTHONPATH
 #python experiments/DAnet_21.py --cuda
-python tools/"level generator"/DAnet_21.py
+python tools/original_level_generator/generator_competition.py
