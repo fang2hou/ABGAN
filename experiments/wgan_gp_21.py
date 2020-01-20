@@ -29,7 +29,7 @@ parser.add_argument('--ngf', type=int, default=32)
 parser.add_argument('--ndf', type=int, default=32)
 parser.add_argument('--batchSize', type=int,
                     default=30, help='input batch size')
-parser.add_argument('--niter', type=int, default=1000,
+parser.add_argument('--niter', type=int, default=1500,
                     help='number of epochs to train for')
 parser.add_argument('--lrD', type=float, default=0.000003,
                     help='learning rate for Critic, default=0.00005')
