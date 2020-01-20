@@ -18,6 +18,7 @@ from torch.autograd import Variable
 import abganlibs.models.sagan as dcgan
 import abganlibs.models.mlp as mlp
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 data_dir = "data/original_data_21/"
 
 parser = argparse.ArgumentParser()
