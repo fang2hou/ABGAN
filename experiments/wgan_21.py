@@ -11,7 +11,7 @@ from torch.autograd import Variable
 import abganlibs.models.dcgan as dcgan
 
 # Run with "python main.py"
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 data_dir = "data/original_data_21/"
 
 parser = argparse.ArgumentParser()

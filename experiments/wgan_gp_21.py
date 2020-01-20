@@ -19,7 +19,7 @@ import abganlibs.models.dcgan_gp as dcgan
 import abganlibs.models.mlp as mlp
 
 # Run with "python main.py"
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
 data_dir = "data/original_data_21/"
 
 parser = argparse.ArgumentParser()
