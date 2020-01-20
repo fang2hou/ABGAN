@@ -5,7 +5,7 @@ import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/WGAN_21/netG_epoch_750_32.pth"
+    saved_model = "saves/WGAN_21/netG_epoch_1000_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -27,9 +27,9 @@ netG.load_state_dict(torch.load(saved_model))
 noise = torch.Tensor(batch_size, nz, 1, 1).normal_(0, 1)
 
 # GPU Acceleration
-if torch.cuda.is_available():
-    noise = noise.cuda()
-    netG = netG.cuda()
+# if torch.cuda.is_available():
+#    noise = noise.cuda()
+#    netG = netG.cuda()
 
 # Generate
 results = netG(noise).data
