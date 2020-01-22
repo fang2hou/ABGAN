@@ -1,11 +1,11 @@
 import torch
 import sys
-import abganlibs.models.dcgan_gp as dcgan
+import abganlibs.models.dcgan_gp_fz as dcgan
 import numpy as np
 
 # Check the parameter is legal or not
 if 1 == len(sys.argv) or ".pth" != sys.argv[1][-4:]:
-    saved_model = "saves/WGAN_GP_5/netG_epoch_800_32.pth"
+    saved_model = "saves/WGAN_GP_5/netG_epoch_2100_32.pth"
     #exit('USE: decoder.py MODEL.pth')
 else:
     saved_model = sys.argv[1]
@@ -14,12 +14,12 @@ else:
 batch_size = 10
 
 # Set the parameters same as the used in training process
-map_size = 128
+map_size = 20
 nz = 32
 ngf = 32
-ngpu = 2
+ngpu = 1
 n_extra_layers = 0
-z_dims = 5
+z_dims = 3
 
 threshold = .5
 
@@ -28,16 +28,12 @@ netG = dcgan.DCGAN_G(map_size, nz, z_dims, ngf, ngpu, n_extra_layers)
 netG.load_state_dict(torch.load(saved_model))
 noise = torch.Tensor(batch_size, nz, 1, 1).normal_(0, 1)
 
-# GPU Acceleration
-if torch.cuda.is_available():
-    noise = noise.cuda()
-    netG = netG.cuda()
-
 # Generate
 results = netG(noise).data
 
 for i, result in enumerate(results, 1):
-    temp = np.zeros((21, map_size * map_size), dtype=float)
+    temp = np.zeros((3, map_size*map_size), dtype=float)
+    print(result.shape)
 
     for x in range(map_size):
         for y in range(map_size):
@@ -57,7 +53,7 @@ for i, result in enumerate(results, 1):
                     reliablity_zero.append(j)
 
             channel = int(temp_binary_type, 2)
-            if channel < 21 and channel >= 0:
+            if channel < 3 and channel >= 0:
                 if len(reliablity_one) != 0:
                     one_avg = sum(reliablity_one) / len(reliablity_one)
                 else:
@@ -72,5 +68,5 @@ for i, result in enumerate(results, 1):
                 index = x * map_size + y
                 temp[channel][index] = channel_value * temp_max
 
-    np.savetxt('data/generated_data_wgan_gp_5/from_net_{0:02d}.gz'.format(i),
+    np.savetxt('data/generated_data_wgan_gp_5_fz/from_net_{0:02d}.txt'.format(i),
                temp, delimiter=",", fmt='%.2f', encoding='utf8')
