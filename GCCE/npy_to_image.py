@@ -5,7 +5,7 @@ import imageio
 from PIL import Image
 
 dataset = np.load('snake.npy')
-part = dataset[:1, :]
+part = dataset[:3, :]
 print(part.shape)
 
 for count in range(0, part.shape[0]):
